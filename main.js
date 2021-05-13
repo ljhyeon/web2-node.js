@@ -36,7 +36,7 @@ var app = http.createServer(function(request,response){
     var title = queryData.id;
     var pathname = url.parse(_url, true).pathname;
 
-    if(pathname === '/') {  // 루트인 경우
+    if(pathname === '/') {  // 루트인 경우!
       if(queryData.id === undefined) {
         fs.readdir('./data', function(err, filelist) {
           title = 'Welcome';
