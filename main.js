@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
+var path = require('path');
 
 function templateHTML(title, list, body, control) {
   return `
@@ -52,11 +53,18 @@ var app = http.createServer(function(request,response) {
         });
       } else {  // 특정 페이지
         fs.readdir('./data', function(error, filelist) {
-          fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description) {
+          var filteredId = path.parse(queryData.id).base;
+          fs.readFile(`data/${filteredId}`, 'utf8', function(err, description) {
             var title = queryData.id;
             var list = templateList(filelist);
             var body = `<h2>${title}</h2><p>${description}</p>`;
-            var control = `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`;
+            var control = `<a href="/create">create</a> 
+            <a href="/update?id=${title}">update</a> 
+            <form action="/delete_process" method="post">
+                        <input type="hidden" name="id" value="${title}">
+                        <input type="submit" value="delete">
+                    </form>
+                    `;
             var template = templateHTML(title, list, body, control);
             response.writeHead(200);
             response.end(template);
@@ -138,6 +146,21 @@ var app = http.createServer(function(request,response) {
             response.end();
           });
         });
+      });
+    } else if (pathname === '/delete_process') {
+      var body = '';
+      request.on('data', function(data) {
+    body = body + data;
+      });
+      request.on('end', function() {
+    var post = qs.parse(body);
+          var id = post.id;
+          console.log(post);
+          console.log(id);
+          fs.unlink(`./data/${id}`, function (err) {
+              response.writeHead(302, {Location: '/'});
+              response.end();
+          });
       });
     }
     else {  // 루트가 아닌 경우
